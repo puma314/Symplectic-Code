@@ -2,7 +2,7 @@
 #Created to examine interesting properties of the Theta set of raising operators
 from pylab import *
 from numpy import *
-
+#vanpeskinator was here...
 
 def copy_my_list(l): #this is a deep copy, since for some reason the regular deep copy wasn't working...
     newlist = []
