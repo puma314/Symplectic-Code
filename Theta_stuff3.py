@@ -18,15 +18,6 @@ def make_copies(l,n):
             l.append(copy_my_list(l[i]))
     return
 
-def make_copies2(l,n):
-    '''makes n copies of every list in list of lists l'''
-    length = len(l)
-    for index in range(n):
-        for i in range(length):
-            l.append(copy_my_list(l[i]))
-    return l
-
-
 
 def make_tuple(differences):
     '''take a tuple of differences from
@@ -223,6 +214,16 @@ def thetaset_sequence(k,n):
     for i in range(1,n+1):
         print str(len(find_thetaset(i,k,1)))
     return
+
+def fuckyouUma(n,k,d,partition):
+    partitions = distinct_partitions(n,k,d)
+    n = len(partition)
+    matching_partitions = []
+    for p in partitions:
+        if p[-n:] == partition:
+            matching_partitions.append(p)
+    return matching_partitions
+
 
 ##print 'For partitions of length 1:'
 ##s1 = find_thetaset(1)
