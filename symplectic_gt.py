@@ -44,5 +44,7 @@ def make_rows(toprow,barred):
     else:
         return nest_partitions(toprow + [0])
 
-def all_patterns(toprow)
+def all_patterns(toprow):
+    '''makes all symplectic gt patterns with given top row'''
+    
     
