@@ -1,8 +1,8 @@
-#Roger Van Peski, 1/13/14
+#Roger Van Peski, 2/15/14
 #Created to examine interesting properties of the Theta set of raising operators
 from pylab import *
 from numpy import *
-#vanpeskinator was here...
+
 
 def copy_my_list(l): #this is a deep copy, since for some reason the regular deep copy wasn't working...
     newlist = []
@@ -58,15 +58,43 @@ def reachable_partitions(partition,k):
              loop = False
     return S
 
+def adjacent_reachables(partition,k,d):
+    reachables = []
+    for i in range(len(partition)-1):
+            if partition[i] == partition[i+1] + k:
+                newpartition = copy_my_list(partition)
+                newpartition[i] -= d; newpartition[i+1] += d
+                reachables.append(newpartition)
+    return reachables
+
+def efficient_reachable_partitions(partition,k,d):
+    n = len(partition)
+    level = [partition]
+    S = []
+    counter = 0
+    while True:
+        S += level
+        newlevel = []
+        for p in level:
+            newlevel += adjacent_reachables(p,k,d)
+        if level == newlevel:
+            break
+        level = newlevel
+        counter += 1
+ #       print str(newlevel)
+    S = remove_duplicates(S)
+    return S
+
                     
-def vectors(partition,k):
+def vectors(partition,k,d):
     '''returns the vector versions of all possible
     raising operators in Theta(partition)'''
-    S = reachable_partitions(partition,k)
+    S = efficient_reachable_partitions(partition,k,d)
     newset = []
     for s in S:
         newset.append(list(array(s) - array(partition)))
     return newset
+
 
 def remove_duplicates(i):
   output = []
@@ -151,7 +179,7 @@ def standard_thetaset(n):
     to the front of the string first.'''
     
 
-def distinct_partitions(n,k):
+def distinct_partitions(n,k,d):
     '''for each element of the theta superset on length n
     gives a representative partition for each possible
     theta set'''
@@ -159,27 +187,30 @@ def distinct_partitions(n,k):
     good_partitions = []
     raising_ops = []
     for p in all_partitions:
-        v = vectors(p,k)
+        v = vectors(p,k,d)
         if v not in raising_ops:
             good_partitions.append(p)
             raising_ops.append(v)
     return good_partitions
         
 
-def find_thetaset(n,k):
-    '''a more efficient version of find_thetaset (old version)'''
+def find_thetaset(n,k,d):
+    '''a more efficient version of find_thetaset (old version).
+    n is length of partition, k is difference condition, d is
+    raising strength (number of 1s moved).'''
     partitions = make_partitions(n,k+1)
     raising_ops = []
     for p in partitions:
-        raising_ops.append(vectors(p,k))
+        raising_ops.append(vectors(p,k,d))
     raising_ops = remove_duplicates(raising_ops)
     return raising_ops
 
-def partition_checker(n,k,d):
-    '''finds all 'ghost partitions' of length n, considering the k
-    last parts, with omegaset difference of d'''
-    longpartitions = distinct_partitions(n,d)
-    shortpartitions = distinct_partitions(k,d)
+def partition_checker(m,n,k,d):
+    '''finds all 'ghost partitions' of length m, considering the n
+    last parts, with omegaset condition difference of k and
+    raising strength d.'''
+    longpartitions = distinct_partitions(m,k,d)
+    shortpartitions = distinct_partitions(n,k,d)
     redundant_partitions = []
     for p in longpartitions:
         if p[n-k:n] not in shortpartitions:
@@ -190,7 +221,7 @@ def thetaset_sequence(k,n):
     '''defines thetaset procedure for difference k, and tests
     size of thetasets up to length n to output a sequence'''
     for i in range(1,n+1):
-        print str(len(find_thetaset(i,k)))
+        print str(len(find_thetaset(i,k,1)))
     return
 
 ##print 'For partitions of length 1:'
