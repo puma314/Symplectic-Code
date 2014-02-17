@@ -224,6 +224,16 @@ def fuckyouUma(n,k,d,partition):
             matching_partitions.append(p)
     return matching_partitions
 
+def fuckyouUmav2(n,k,d):
+    partitions = distinct_partitions(n,k,d)
+    lilpartitions = distinct_partitions(n-1,k,d)
+    nonmatchers = []
+    for p in partitions:
+        if p[1:] not in lilpartitions:
+            nonmatchers.append(p)
+    return nonmatchers
+    
+
 
 ##print 'For partitions of length 1:'
 ##s1 = find_thetaset(1)
