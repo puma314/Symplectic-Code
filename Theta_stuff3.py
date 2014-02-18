@@ -239,11 +239,11 @@ def standard_thetaset(n):
     to the front of the string first.'''
     
 
-def distinct_partitions(n,k,d):
+def distinct_partitions(n,k,d,is_strict):
     '''for each element of the theta superset on length n
     gives a representative partition for each possible
     theta set'''
-    all_partitions = make_partitions(n,k+1)
+    all_partitions = make_partitions(n,k+1,is_strict)
     good_partitions = []
     raising_ops = []
     for p in all_partitions:
@@ -419,14 +419,21 @@ def fuckyouUma(n,k,d,partition):
     return matching_partitions
 
 def fuckyouUmav2(n,k,d):
-    partitions = distinct_partitions(n,k,d)
-    lilpartitions = distinct_partitions(n-1,k,d)
+    partitions = distinct_partitions(n,k,d,1)
+    lilpartitions = distinct_partitions(n-1,k,d,1)
     nonmatchers = []
     for p in partitions:
         if p[1:] not in lilpartitions:
             nonmatchers.append(p)
     return nonmatchers
     
+
+##def set_equiv(list1,list2):
+##    for i in list1:
+##        if i not in list2:
+##            print 'This thing is in list1, not in list2: '
+##            print str(i)
+##        if i in list2:
 
 
 ##print 'For partitions of length 1:'
