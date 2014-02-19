@@ -130,9 +130,19 @@ def indexed_patterns(toprow):
     return weight_dict
         
             
-                
+def mathematica_gts(toprow):
+    pylist = all_patterns(toprow)
+    pystring = str(pylist)
+    pystring2 = pystring.replace('[','{')
+    pystring3 = pystring2.replace(']','}')
+    return pystring3
 
-
+def mathematica_secondrows(toprow):
+    pylist = all_secondrowpatterns(toprow)
+    pystring = str(pylist)
+    pystring2 = pystring.replace('[','{')
+    pystring3 = pystring2.replace(']','}')
+    return pystring3
 
             
     
