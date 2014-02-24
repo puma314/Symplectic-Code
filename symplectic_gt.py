@@ -145,5 +145,86 @@ def mathematica_secondrows(toprow):
     return pystring3
 
             
+def prettyform(pattern):
+    '''prints a symplectic gt pattern nicely'''
+    for i in range(len(pattern)):
+        if i%2==0:
+            print i*'  '+str(pattern[i])
+        else:
+            print i*'  '+str(pattern[i])
+    return
+
+
+def collect_input(toprow):
+    '''gives something to input directly into the second
+    argument of PolynomialReduce on Mathematica. '''
+    secondrows1 = mathematica_secondrows(toprow)
+    numvar = len(toprow)
+    powerstring = '('
+    for i in range(numvar):
+        powerstring += 'Subscript[x,' + str(i+1) + ']'
+    powerstring += ')^(20)'
+    start = toprow[0]
+    secondrows2 = secondrows1.replace('{{' + str(start),'Expand['+powerstring+'secondrowstats[{'+str(start))
+    secondrows3 = secondrows2.replace('}}','}]]')
+    return secondrows3
+
+def ind(gt):
+    '''takes the ind statistic of a symplectic gt pattern'''
+    ind = 0
+    for i1 in range(len(gt)): #loops down the rows
+        row1 = gt[i1]
+        if i1%2==0: #nonbarred row
+            row2 = gt[i1+1]
+            for i2 in range(len(row1)-1): #loops over entries
+                if row1[i2] > row2[i2] and row1[i2+1] == row2[i2]:
+                    print 'c1: ' + str(row2[i2])
+                    ind += 1
+            if i1>0: #not the top row
+                row0 = gt[i1-1]
+                for i2 in range(len(row1)):
+                    if row1[i2] < row0[i2]:
+                        ind -=1
+                        print 'c2: ' + str(row1[i2])
+        if i1%2==1 and gt[i1][-1]>0:#barred row
+            ind -= 1
+            print 'c3: ' + str(gt[i1][-1])
+    return ind
+            
+            
+def btw(gt):
+    '''takes the btw ('special') statistic of input pattern.'''
+    newgt = deepcopy(gt)
+    btw = 0
+    for i in range(0,len(gt),2):
+        newgt[i].append(0) #adds ghost zeros
+    for i in range(1,len(gt)):
+        for j in range(0,len(gt[i])):
+            if gt[i][j] != gt[i-1][j] and gt[i][j] != newgt[i-1][j+1]:
+                btw += 1
+    return btw
+
+
+def remove_specials(patternlist):
+    '''removes all patterns in input list with special entries'''
+    newlist = []
+    for p in patternlist:
+        if btw(p) == 0:
+            newlist.append(p)
+    return newlist
     
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
     

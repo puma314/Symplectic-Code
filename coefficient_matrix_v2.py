@@ -83,7 +83,34 @@ def property_set(row1,row2): #pretty self-explanatory, uncomment the first lines
         propertyset.append(entryset)
     return propertyset
 
-
+def flipped_prop_set(row1,row2):
+    #q=1
+    #t=1
+    propertyset = []
+    for index in range(len(row2)):
+        entryset = [0,0,0] #first term is c coefficient, second is left slice, third is right slice
+        if row2[index] == row1[index] or row2[index] == row1[index+1]:
+            entryset[0] = 0
+        if row2[index] != row1[index] and row2[index] != row1[index+1]:
+            entryset[0] = (1-t)*(1-q)
+        if row2[index] > row1[index]: #outward
+            entryset[1] = 0
+        if row2[index] == row1[index]: #left
+            entryset[1] = 1
+        if row2[index] == row1[index]-1: #almost left
+            entryset[1] = (-q*t)
+        if row2[index] < row1[index]-1: #left_special
+            entryset[1] = 0
+        if row2[index] < row1[index+1]: #outward
+            entryset[2] = 0
+        if row2[index] == row1[index+1]: #right
+            entryset[2] = (-q)
+        if row2[index] == row1[index+1]+1: #almost right
+            entryset[2] = t
+        if row2[index] > row1[index+1]+1: #right-special
+            entryset[2] = 0
+        propertyset.append(entryset)
+    return propertyset
 
 def coef_matrix(row1,row2):
     '''creates the coefficient matrix M(row1;row2)'''
