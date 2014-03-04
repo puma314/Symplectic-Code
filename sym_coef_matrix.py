@@ -1,4 +1,6 @@
 #Roger Van Peski, 2/24/2014
+#most of these things are just conjectural formulas; they aren't deleted when
+#they turn out to be wrong, just commented out
 from pylab import *
 from numpy import *
 

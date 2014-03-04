@@ -1,6 +1,6 @@
 #Roger Van Peski, 2/16/14
 from copy import *
-
+from numpy import *
 
 
 
@@ -212,9 +212,63 @@ def remove_specials(patternlist):
         if btw(p) == 0:
             newlist.append(p)
     return newlist
-    
-                    
 
+def convert_to_tuples(oldL,d):
+    '''takes a list of lists of lists etc. of depth d,
+    and converts to tuple of tuples of tuples.'''
+    L = deepcopy(oldL)
+    if d == 1: #list contains no lists
+        return tuple(L)
+    else:
+        for i in range(len(L)):
+            L[i] = convert_to_tuples(L[i],d-1)
+    L = tuple(L)
+    return L
+
+
+def texable_secondrows(l):
+    secondrows = indexed_secondrows(l)
+    for index in secondrows:
+        removables = []
+        for i in range(len(secondrows[index])):
+            for j in range(i,len(secondrows[index])):
+                if sum(secondrows[index][i][1]) == sum(secondrows[index][j][1]): #collapses patterns with same row sum
+                    secondrows[index][i] = str(secondrows[index][i])+'+'+str(secondrows[index][j])
+                    removables.append(secondrows[index][j])
+        for r in removables:                                  
+            secondrows[index].remove(r)
+        secondrows[index][:] = str(secondrows[index][:])
+    return secondrows
+
+def convert_to_tuples(oldL,d):
+    '''takes a list of lists of lists etc. of depth d,
+    and converts to tuple of tuples of tuples.'''
+    L = deepcopy(oldL)
+    if d == 1: #list contains no lists
+        return tuple(L)
+    else:
+        for i in range(len(L)):
+            L[i] = convert_to_tuples(L[i],d-1)
+    L = tuple(L)
+    return L
+
+                    
+def latex_table(toprow):
+    '''makes a template for the tex table for a given toprow.'''
+    l = list(array(toprow)+array(range(1,len(toprow)+1)[::-1]))
+    table = '' #our string where we'll put all the code
+    lambdastring = str(l).replace('[','(').replace(']',')')
+    table += '\[ \ begin{array}{|l|r|c|c|c|} \hline \ text{Pattern with } \l = ' + lambdastring + '& \ text{Coefficient} & \ text{Power} & \ text{Coef} - \ text{Reg GT} & \ldots+w(\mu_1)d(\mu_2) \\\hline'
+    patterns = indexed_secondrows(toprow)
+    for wgt_index in range(min(patterns),max(patterns)+1):
+        for pattern in patterns[wgt_index]:
+            patterns_left = str(pattern).replace('[','(')
+            patterns_right = patterns_left.replace(']',')')
+            table += '\n' #linebreak
+            table += patterns_right + ' & <put coefficient here> & x_1^{'+str(wgt_index)+'} &   &   \\ \hline'
+    table += '\n' + '\end{array} \]'
+    print table
+    return
 
 
 
