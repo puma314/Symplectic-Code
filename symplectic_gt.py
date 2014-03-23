@@ -39,12 +39,47 @@ def nest_partitions(toprow,is_barred):
             newrows.append(row)            
     return newrows
 
+def ns_nest_partitions(toprow,is_barred):
+    '''nonstrict partition nester'''
+    rows = [[]]
+    newrows = []
+    for i in range(len(toprow)-1):
+        old_length = len(rows)
+        bound = toprow[i+1]
+        d = toprow[i]-bound
+        make_copies(rows,d)
+        choices = range(bound,toprow[i]+1)
+        for a in range(toprow[i]+1-bound):
+            for b in range(old_length*a,old_length*(a+1)):
+                rows[b].append(choices[a])           
+    return rows
+    
+
+def weight(row1,row1bar,row2):
+    return sum(row1)-2*sum(row1bar)+sum(row2)
+
+def total_weight(pattern):
+    '''returns the weight vector of a symplectic pattern'''
+    k = len(pattern)/2
+    weightlist = []
+    for i in range(0,2*(k-1),2):
+        weightlist.append(weight(pattern[i],pattern[i+1],pattern[i+2]))
+    weightlist.append(sum(pattern[-2])-2*sum(pattern[-1]))
+    return weightlist
+
 def make_rows(toprow,is_barred):
     '''nests a row to toprow, treating it as either barred or nonbarred'''
     if is_barred:
         return nest_partitions(toprow,is_barred)
     else:
         return nest_partitions(toprow + [0],is_barred)
+
+def ns_make_rows(toprow,is_barred):
+    '''nests a nonstrict row to toprow, treating it as either barred or nonbarred'''
+    if is_barred:
+        return ns_nest_partitions(toprow,is_barred)
+    else:
+        return ns_nest_partitions(toprow + [0],is_barred)
 
 def secondrowlists(toprow,is_barred):
     '''makes a list of all possible GT2 patterns of given top row'''
@@ -54,6 +89,13 @@ def secondrowlists(toprow,is_barred):
         newnewrows.append([deepcopy(toprow),row])
     return newnewrows
         
+def ns_secondrowlists(toprow,is_barred):
+    '''makes a list of all possible nonstrict GT2 patterns of given top row'''
+    newrows = ns_make_rows(toprow,is_barred)
+    newnewrows = []
+    for row in newrows:
+        newnewrows.append([deepcopy(toprow),row])
+    return newnewrows
 
 def all_patterns(toprow):
     '''makes all symplectic gt patterns with given top row'''
@@ -67,6 +109,72 @@ def all_patterns(toprow):
         for pattern in patterns:
             is_barred = (len(pattern[-1]) == len(pattern[-2]))
             newrows = make_rows(pattern[-1],is_barred)
+            l = len(newrows)
+            newpatterns = [pattern]
+            make_copies(newpatterns,l-1)
+            for i in range(l):
+                newpatterns[i] += [newrows[i]]
+            newnewpatterns += newpatterns
+        patterns = newnewpatterns
+    return patterns
+
+def ns_all_patterns(toprow):
+    '''makes all symplectic gt patterns with given top row'''
+    patterns = ns_secondrowlists(toprow,False)
+    looping = True
+    while looping:
+        if len(patterns[0][-1]) == 1 and len(patterns[0][-2]) == 1: #when done
+            looping = False
+            break
+        newnewpatterns = []
+        for pattern in patterns:
+            is_barred = (len(pattern[-1]) == len(pattern[-2]))
+            newrows = ns_make_rows(pattern[-1],is_barred)
+            l = len(newrows)
+            newpatterns = [pattern]
+            make_copies(newpatterns,l-1)
+            for i in range(l):
+                newpatterns[i] += [newrows[i]]
+            newnewpatterns += newpatterns
+        patterns = newnewpatterns
+    return patterns
+
+def indexed_all_patterns(toprow):
+    '''makes dictionary of all symplectic patterns of toprow, indexed by weight'''
+    allpatterns = all_patterns(toprow)
+    patterndict = {}
+    for p in allpatterns:
+        w = tuple(total_weight(p))
+        if w not in patterndict:
+            patterndict[w] = [p]
+        else:
+            patterndict[w].append(p)
+    return patterndict
+
+def ns_indexed_all_patterns(toprow):
+    '''makes dictionary of all nonstrict symplectic patterns of toprow, indexed by weight'''
+    allpatterns = ns_all_patterns(toprow)
+    patterndict = {}
+    for p in allpatterns:
+        w = tuple(total_weight(p))
+        if w not in patterndict:
+            patterndict[w] = [p]
+        else:
+            patterndict[w].append(p)
+    return patterndict
+
+def ns_all_patterns(toprow):
+    '''makes all nonstrict symplectic gt patterns with given top row'''
+    patterns = ns_secondrowlists(toprow,False)
+    looping = True
+    while looping:
+        if len(patterns[0][-1]) == 1 and len(patterns[0][-2]) == 1: #when done
+            looping = False
+            break
+        newnewpatterns = []
+        for pattern in patterns:
+            is_barred = (len(pattern[-1]) == len(pattern[-2]))
+            newrows = ns_make_rows(pattern[-1],is_barred)
             l = len(newrows)
             newpatterns = [pattern]
             make_copies(newpatterns,l-1)
@@ -94,7 +202,27 @@ def all_secondrowpatterns(toprow):
     patterns = newnewpatterns
     return patterns
 
+def ns_all_secondrowpatterns(toprow):
+    '''(nonstrict) makes all symplectic secondrows (i.e. lists of first, second, and
+    third row so that we can calculate wgt_1(T)'''
+    patterns = ns_secondrowlists(toprow,False)
+    looping = True
+    newnewpatterns = []
+    for pattern in patterns:
+        is_barred = (len(pattern[-1]) == len(pattern[-2]))
+        newrows = ns_make_rows(pattern[-1],is_barred)
+        l = len(newrows)
+        newpatterns = [pattern]
+        make_copies(newpatterns,l-1)
+        for i in range(l):
+            newpatterns[i] += [newrows[i]]
+        newnewpatterns += newpatterns
+    patterns = newnewpatterns
+    return patterns
+
 def indexed_secondrows(toprow):
+    '''makes dictionary of all secondrowpatterns
+    with given top row, indexed by wgt_1.'''
     patterns = all_secondrowpatterns(toprow)
     weights = []
     weight_dict = {}
@@ -106,11 +234,30 @@ def indexed_secondrows(toprow):
             weight_dict[weight] = [pattern]
     for i in range(min(weight_dict),max(weight_dict)+1):
         print 'All patterns for which wgt_1(T) = ' + str(i) + ':'
+        counter = 0
         for pattern in weight_dict[i]:
-            print pattern
+            counter +=1
+            print 's'+str(counter)+'=secondrowstats['+str(pattern)[1:-1].replace('[','{').replace(']','}')+']'
     return weight_dict
 
-
+def ns_indexed_secondrows(toprow):
+    '''see indexed_secondrows, but nonstrict'''
+    patterns = ns_all_secondrowpatterns(toprow)
+    weights = []
+    weight_dict = {}
+    for pattern in patterns:
+        weight = sum(pattern[0]) - 2*sum(pattern[1]) + sum(pattern[2])
+        if weight in weight_dict:
+            weight_dict[weight].append(pattern)
+        else:
+            weight_dict[weight] = [pattern]
+    for i in range(min(weight_dict),max(weight_dict)+1):
+        print 'All patterns for which wgt_1(T) = ' + str(i) + ':'
+        counter = 0
+        for pattern in weight_dict[i]:
+            counter +=1
+            print 's'+str(counter)+'=secondrowstats['+str(pattern)[1:-1].replace('[','{').replace(']','}')+']'
+    return weight_dict
 
 def indexed_patterns(toprow):
     '''indexes all patterns with given top row by wgt_1(T)'''
@@ -125,8 +272,10 @@ def indexed_patterns(toprow):
             weight_dict[weight] = [pattern]
     for i in range(min(weight_dict),max(weight_dict)+1):
         print 'All patterns for which wgt_1(T) = ' + str(i) + ':'
+        counter = 0
         for pattern in weight_dict[i]:
-            print pattern
+            counter +=1
+            print 's'+str(counter)+'=secondrowstats['+str(pattern)[1:-1].replace('[','{').replace(']','}')+']'
     return weight_dict
         
             
@@ -252,33 +401,156 @@ def convert_to_tuples(oldL,d):
     L = tuple(L)
     return L
 
+def remove_duplicates(i):
+  output = []
+  for x in i:
+    if x not in output:
+      output.append(x)
+  return output
+
+##def secondrowlist(secondrowpatterns):
+##    '''takes a dictionary of secondrowpatterns and
+##    makes a list of all possible values for the sum
+##    of the second row, so we can collect secondrowstats.'''
+##    secondsums = []
+##    for wgt in secondrowpatterns:
+##        for pattern in secondrowpatterns[wgt]:
+##            secondsums.append(sum(pattern[1]))
+##    secondsums = remove_duplicates(secondsums)
+##    return secondsums
+
+def double_ind_secondrows(toprow):
+    '''makes a dictionary of secondrowpatterns indexed
+    by weight, then by sum of second row.'''
+    dict1 = indexed_secondrows(toprow)
+    for wgt in dict1:
+        patterns = dict1[wgt]
+        indexed_patterns = {}
+        secondsums = []
+        for pattern in patterns:
+            secondsums.append(sum(pattern[1]))
+        for secondsum in secondsums:
+            mypatterns = []
+            for pattern in patterns:
+                if sum(pattern[1]) == secondsum:
+                    mypatterns.append(pattern)
+            indexed_patterns[secondsum] = mypatterns
+        dict1[wgt] = indexed_patterns
+    return dict1
+        
+
+def ns_double_ind_secondrows(toprow):
+    '''(nonstrict) makes a dictionary of secondrowpatterns indexed
+    by weight, then by sum of second row.'''
+    dict1 = ns_indexed_secondrows(toprow)
+    for wgt in dict1:
+        patterns = dict1[wgt]
+        indexed_patterns = {}
+        secondsums = []
+        for pattern in patterns:
+            secondsums.append(sum(pattern[1]))
+        for secondsum in secondsums:
+            mypatterns = []
+            for pattern in patterns:
+                if sum(pattern[1]) == secondsum:
+                    mypatterns.append(pattern)
+            indexed_patterns[secondsum] = mypatterns
+        dict1[wgt] = indexed_patterns
+    return dict1
                     
+##def latex_table(toprow):
+##    '''makes a template for the tex table for a given toprow.'''
+##    l = list(array(toprow)+array(range(1,len(toprow)+1)[::-1]))
+##    table = '' #our string where we'll put all the code
+##    lambdastring = str(l).replace('[','(').replace(']',')')
+##    table += '\[ \ begin{array}{|l|r|c|c|c|} \hline \ text{Pattern with } \l = ' + lambdastring + '& \ text{Coefficient} & \ text{Power} & \ text{Coef} - \ text{Reg GT} & \ldots+w(\mu_1)d(\mu_2) \\\hline'
+##    patterns = indexed_secondrows(toprow)
+##    secondsums = secondrowlist(patterns)
+##    for wgt_index in range(min(patterns),max(patterns)+1):
+##        for pattern in patterns[wgt_index]:
+####            secondrowstats = sum(pattern[1])
+####            for pattern in patterns
+##            patterns_left = str(pattern).replace('[','(')
+##            patterns_right = patterns_left.replace(']',')')
+##            table += '\n' #linebreak
+##            table += patterns_right + ' & <put coefficient here> & x_1^{'+str(wgt_index)+'} &   &   <change to double backslash> \hline'
+##    table += '\n' + '\end{array} \]'
+##    print table
+##    return
+
+
+
 def latex_table(toprow):
     '''makes a template for the tex table for a given toprow.'''
-    l = list(array(toprow)+array(range(1,len(toprow)+1)[::-1]))
+    l = list(array(toprow)-array(range(1,len(toprow)+1)[::-1]))
     table = '' #our string where we'll put all the code
     lambdastring = str(l).replace('[','(').replace(']',')')
-    table += '\[ \ begin{array}{|l|r|c|c|c|} \hline \ text{Pattern with } \l = ' + lambdastring + '& \ text{Coefficient} & \ text{Power} & \ text{Coef} - \ text{Reg GT} & \ldots+w(\mu_1)d(\mu_2) \\\hline'
-    patterns = indexed_secondrows(toprow)
+    table += '\[ \ begin{array}{|l|r|c|c|c|} \hline \ text{Pattern with } \l = ' + \
+                 lambdastring + '& \ text{Coefficient} & \ text{Power} & \ text{Coef} - \ text{Reg GT} & \ldots+w(\mu_1)d(\mu_2) <change to double backslash>  \hline'
+    patterns = double_ind_secondrows(toprow)
     for wgt_index in range(min(patterns),max(patterns)+1):
-        for pattern in patterns[wgt_index]:
-            patterns_left = str(pattern).replace('[','(')
+        for secondsum in patterns[wgt_index]:
+            patternstring = ''
+            mypatterns = patterns[wgt_index][secondsum]
+            for i in range(len(mypatterns)-1):
+                patternstring += str(mypatterns[i])
+                patternstring += '+'
+            patternstring += str(mypatterns[-1])
+            patterns_left = patternstring.replace('[','(')
             patterns_right = patterns_left.replace(']',')')
             table += '\n' #linebreak
-            table += patterns_right + ' & <put coefficient here> & x_1^{'+str(wgt_index)+'} &   &   \\ \hline'
+            table += patterns_right + ' & <put coefficient here> & x_1^{'+str(wgt_index)+'} &   &   <change to double backslash> \hline'
     table += '\n' + '\end{array} \]'
     print table
     return
+                           
+def ns_latex_table(toprow):
+    '''(nonstrict) makes a template for the tex table for a given toprow.'''
+    l = list(array(toprow)-array(range(1,len(toprow)+1)[::-1]))
+    table = '' #our string where we'll put all the code
+    lambdastring = str(l).replace('[','(').replace(']',')')
+    table += '\[ \ begin{array}{|l|r|c|c|c|} \hline \ text{Pattern with } \l = ' + \
+                 lambdastring + '& \ text{Coefficient} & \ text{Power} & \ text{Coef} - \ text{Reg GT} & \ldots+w(\mu_1)d(\mu_2) <change to double backslash>  \hline'
+    patterns = ns_double_ind_secondrows(toprow)
+    for wgt_index in range(min(patterns),max(patterns)+1):
+        for secondsum in patterns[wgt_index]:
+            patternstring = ''
+            mypatterns = patterns[wgt_index][secondsum]
+            for i in range(len(mypatterns)-1):
+                patternstring += str(mypatterns[i])
+                patternstring += '+'
+            patternstring += str(mypatterns[-1])
+            patterns_left = patternstring.replace('[','(')
+            patterns_right = patterns_left.replace(']',')')
+            table += '\n' #linebreak
+            table += patterns_right + ' & <put coefficient here> & x_1^{'+str(wgt_index)+'} &   &   <change to double backslash> \hline'
+    table += '\n' + '\end{array} \]'
+    print table
+    return
+                           
 
-
-
-
-
-
-
-
-
-
-
+def new_latex_table(toprow):
+    '''(new) makes a template for the tex table for a given toprow.'''
+    l = list(array(toprow)-array(range(1,len(toprow)+1)[::-1]))
+    table = '' #our string where we'll put all the code
+    lambdastring = str(l).replace('[','(').replace(']',')')
+    table += '\[ \ begin{array}{|l|r|c|c|c|c|c|c|c|} \hline \ text{Pattern with } \l = ' + \
+                 lambdastring + '& \ text{Actual Coefficient} & \ text{Power} & \ text{Symmatrix w/ }\Omega & \ text{Symmatrix w/o } \Omega & \text{Reg GT w/}\Omega & \text{Reg GT w/o }\Omega & & <change to double backslash>  \hline'
+    patterns = double_ind_secondrows(toprow)
+    for wgt_index in range(min(patterns),max(patterns)+1):
+        for secondsum in patterns[wgt_index]:
+            patternstring = ''
+            mypatterns = patterns[wgt_index][secondsum]
+            for i in range(len(mypatterns)-1):
+                patternstring += str(mypatterns[i])
+                patternstring += '+'
+            patternstring += str(mypatterns[-1])
+            patterns_left = patternstring.replace('[','(')
+            patterns_right = patterns_left.replace(']',')')
+            table += '\n' #linebreak
+            table += patterns_right + ' & <put coefficient here> & x_1^{'+str(wgt_index)+'} &   &  &  &  &  &  <change to double backslash> \hline'
+    table += '\n' + '\end{array} \]'
+    print table
+    return
 
     
